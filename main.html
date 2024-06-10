@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TalkDrove || Navigation Path</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url(https://raw.githubusercontent.com/HyHamza/HyHamza/main/Image.jpg);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
+
+    .btn {
+      --color: #e5f5f1;
+      --color2: rgb(0, 0, 0);
+      width: 200px;
+      padding: 0.8em 1.75em;
+      background-color: transparent;
+      border-radius: 6px;
+      border: .3px solid var(--color);
+      transition: .5s;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 1;
+      font-weight: 300;
+      font-size: 17px;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+      text-transform: uppercase;
+      color: var(--color);
+      margin-bottom: 24px;
+    }
+
+    .btn::after, .btn::before {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform: skew(90deg) translate(-50%, -50%);
+      position: absolute;
+      inset: 50%;
+      left: 25%;
+      z-index: -1;
+      transition: .5s ease-out;
+      background-color: var(--color);
+    }
+
+    .btn::before {
+      top: -50%;
+      left: -25%;
+      transform: skew(90deg) rotate(180deg) translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      transform: skew(45deg) rotate(180deg) translate(-50%, -50%);
+    }
+
+    .btn:hover::after {
+      transform: skew(45deg) translate(-50%, -50%);
+    }
+
+    .btn:hover {
+      color: var(--color2);
+    }
+
+    .btn:active {
+      filter: brightness(.7);
+      transform: scale(.98);
+    }
+
+
+
+    .copyright {
+      margin-top: 20px;
+      color: #ffffff;
+    }
+
+
+
+  </style>
+</head>
+<body>
+  
+  <center>
+  <button onclick="window.open(`/qr`)" class="btn">QR Code</button>
+  <button onclick="window.open(`/pair`)" class="btn">Pair Code</button>
+  <button onclick="window.open(`https://github.com/HyHamzax/BYTE-MD`)" class="btn">github</button>
+  <button onclick="window.open(`https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l`)" class="btn">WaChannel</button>
+  </center>
+
+  <div class="copyright">
+    <center>
+    <p>&copy; TalkDrove 2024</p>
+    
+    </center>
+    
+  </div>
+<!-- GetButton.io widget -->
+<script type="text/javascript">
+    (function () {
+        var options = {
+          
+            whatsapp: "+923072380380", // WhatsApp number
+            call_to_action: "Need Help?", // Call to action
+            button_color: "#FF318E", // Color of butto 
+            position: "left", // Position may be 'left' or 'right'
+            order: "whatsapp", // Order of buttons
+            pre_filled_message: "Hey, Hamza, Can you help me with....", // WhatsApp pre-filled message
+        };
+        var proto = 'https:', host = "getbutton.io", url = proto + '//static.' + host;
+        var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = url + '/widget-send-button/js/init.js';
+        s.onload = function () { WhWidgetSendButton.init(host, proto, options); };
+        var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);
+    })();
+</script>
+<!-- /GetButton.io widget -->
+</html>

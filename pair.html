@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BYTE-MD || PAIR CODE</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url(https://raw.githubusercontent.com/HyHamza/HyHamza/main/Image.jpg);
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .box {
+      width: 300px;
+      height: 330px;
+      padding: 20px;
+      position: relative;
+      text-align: center;
+      background-color: rgba(255,255,255,0.5);
+      border-radius: 10px;
+      transform: perspective(1000px) rotateY(0deg);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+      position: relative;}
+
+    #text {
+      color: #000000;
+    }
+
+    .input-container input {
+      color: #000000;
+    }
+
+    .centered-text {
+      color: #e9e4e4;
+    }
+
+    .input-container {
+      display: flex;
+      background: rgb(10, 10, 10);
+      border-radius: 1rem;
+      background: black;
+      box-shadow: black;
+      padding: 0.3rem;
+      gap: 0.3rem;
+      max-width: 300px;
+      width: 100%;
+    }
+
+    .input-container input {
+      border-radius: 0.8rem 0 0 0.8rem;
+      background: #e8e8e8;
+      box-shadow: inset 13px 13px 10px #dcdcdc, inset -13px -13px 10px #f4f4f4;
+      width: 100%;
+      flex-basis: 75%;
+      padding: 1rem;
+      border: none;
+      border-left: 2px solid #ecf2f8;
+      color: #000000;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .input-container input:focus {
+      border-left: 2px solid #ecf1f6;
+      outline: none;
+      box-shadow: inset 13px 13px 10px #f0f2f3, inset -13px -13px 10px #f4f4f4;
+    }
+
+    .input-container button {
+      flex-basis: 15%;
+      padding: 1rem;
+      background: #5935ac;
+      font-weight: 700;
+      letter-spacing: 0.3rem;
+      text-transform: uppercase;
+      color: white;
+      border: none;
+      width: 90%;
+      border-radius: 0 1rem 1rem 0;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .input-container button:hover {
+      background: linear-gradient(135deg, #c01736 0%, #8b17b6 100%);
+    }
+
+    @media (max-width: 500px) {
+      .input-container {
+        flex-direction: column;
+      }
+
+      .input-container input {
+        border-radius: 0.8rem;
+      }
+
+      .input-container button {
+        padding: 0.4rem;
+        border-radius: 0.8rem;
+      }
+    }
+
+    .centered-text {
+      text-align: center;
+    }
+
+    @media (max-width: 500px) {
+      .box {
+        width: 90%; 
+      }
+    }
+
+    @media (max-width: 500px) {
+      .input-container input {
+        border-radius: 0.8rem;
+        width: 80%; 
+      }
+
+      .input-container button {
+        padding: 1rem;
+        border-radius: 0.9rem;
+        width: 100%; 
+      }
+ 
+
+
+
+
+.news-container ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    animation: scroll 25s infinite linear;
+}
+
+.news-container ul li {
+    white-space: nowrap;
+    padding: 10px 24px;
+    color: #ffa500;
+    position: relative;
+}
+
+.news-container ul li::after {
+    content:"";
+    width: 1px;
+    height: 100%;
+    background: #ee82ee;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.news-container ul li:last-child::after {
+    display: none;
+}
+
+@keyframes scroll {
+    from {
+        transform: translateX(100%);
+    }
+
+    to {
+        transform: translateX(-1083px);
+
+    }
+}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main">
+      <div class="box" id="box">
+        <div id="text">
+          <p>
+            <h3 class="centered-text">Link with your WhatsApp</h3>
+            <br>
+            <h6>Enter your number with a country code.</h6>
+            <div class="input-container">
+              <input placeholder="+923072380380" type="number" id="number" placeholder="Enter Your Phone number with a Country Code" name="">
+              <button id="submit">okey</button>
+            </div>
+            
+            <a id="waiting-message" class="centered-text" style="display: none;">Please wait a while...</a>
+            <br>
+            <br>
+            <main id="pair"></main>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    let a = document.getElementById("pair");
+    let b = document.getElementById("submit");
+    let c = document.getElementById("number");
+    let box = document.getElementById("box");
+
+    async function Copy() {
+      let text = document.getElementById("copy").innerText;
+      let obj = document.getElementById("copy");
+      await navigator.clipboard.writeText(obj.innerText.replace('CODE: ', ''));
+      obj.innerText = "COPIED";
+      obj.style = "color:blue;font-weight:bold";
+      obj.size = "5";
+      setTimeout(() => {
+        obj.innerText = text;
+        obj.style = "color:white;font-weight-bold";
+        obj.size = "5";
+      }, 500);
+    }
+
+    b.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!c.value) {
+        a.innerHTML = '<a style="color:white;font-weight:bold">Enter your WhatsApp number with a country code</a><br><br>';
+      } else if (c.value.replace(/[^0-9]/g, "").length < 11) {
+        a.innerHTML = '<a style="color:red;font-weight:bold">Invalid number</a><br><br>';
+      } else {
+        const Venocyber_Tech = c.value.replace(/[^0-9]/g, "");
+        let bb = "";
+        let bbc = "";
+        const cc = Venocyber_Tech.split('');
+        cc.map(a => {
+          bbc += a;
+          if (bbc.length == 3) {
+            bb += " " + a;
+          } else if (bbc.length == 8) {
+            bb += " " + a;
+          } else {
+            bb += a;
+          }
+        });
+        c.type = "text";
+        c.value = "+" + bb;
+        c.style = "color:black;font-size:20px";
+        a.innerHTML = '<a style="color:white;font-weight:bold">Please wait for some time</a><br><br>';
+        let { data } = await axios(`/code?number=${Venocyber_Tech}`);
+        let code = data.code || "Service Unavailable";
+        a.innerHTML = '<font id="copy" onclick="Copy()" style="color:red;font-weight:bold" size="5">CODE: <span style="color:white;font-weight:bold">' + code + '</span></font><br><br><br>';
+      }
+    });
+  </script>
+  <!-- GetButton.io widget -->
+<script type="text/javascript">
+    (function () {
+        var options = {
+       
+        
+            whatsapp: "+923072380380", // WhatsApp number
+            call_to_action: "Need Help?", // Call to action
+            button_color: "#FF318E", // Color of butto 
+            position: "left", // Position may be 'left' or 'right'
+            order: "whatsapp", // Order of buttons
+            pre_filled_message: "Hey, Hamza Can you help me with pairing...", // WhatsApp pre-filled message
+        };
+        var proto = 'https:', host = "getbutton.io", url = proto + '//static.' + host;
+        var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = url + '/widget-send-button/js/init.js';
+        s.onload = function () { WhWidgetSendButton.init(host, proto, options); };
+        var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);
+    })();
+</script>
+<!-- /GetButton.io widget -->  
+</body>
+</html>

@@ -57,10 +57,8 @@ router.get('/', async (req, res) => {
                let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 
                let Byte_MD_TEXT = `
-*_Hey, You have got session ID for BYTE-MD, Now you can easily deploy Byte-MD_*\n*This is the Repo Link:*https://github.com/HyHamza/BYTE-MD/\n*Don't Forget to follow TalkDrove:*https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l
-*Have a Nice Day*
-
-_Don't Forget To Give Star To My Repo_`
+*_Your have completed First step!_* \n *Repo Link:* https://github.com/HyHamza/BYTE-MD/ \n *WhatsApp Channel:* https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l \n *Onwer Number:* wa.me/923072380380
+*Have a Nice Day*`
  await Hamza.sendMessage(Hamza.user.id,{text:Byte_MD_TEXT},{quoted:session})
  
 

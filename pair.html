@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BYTE-MD || PAIR CODE</title>
+  <link rel="shortcut icon" type="x-icon" href="https://raw.githubusercontent.com/HyHamza/HyHamza/main/Images/Fav-Icon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,7 +15,7 @@
       align-items: center;
       height: 100vh;
       margin: 0;
-      background-image: url(https://raw.githubusercontent.com/HyHamza/HyHamza/main/Image.jpg);
+      background-image: url(https://raw.githubusercontent.com/HyHamza/HyHamza/main/Images/logo.jpg);
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;
@@ -48,15 +49,15 @@
     }
 
     .centered-text {
-      color: #e9e4e4;
+      color: #000000;
     }
 
     .input-container {
       display: flex;
-      background: rgb(10, 10, 10);
+      background: rgb(24, 19, 19);
       border-radius: 1rem;
-      background: black;
-      box-shadow: black;
+      background: rgba(13, 91, 94, 0);
+      box-shadow: rgb(20, 135, 170);
       padding: 0.3rem;
       gap: 0.3rem;
       max-width: 300px;
@@ -85,7 +86,7 @@
     .input-container button {
       flex-basis: 15%;
       padding: 1rem;
-      background: #5935ac;
+      background: #0c87ce;
       font-weight: 700;
       letter-spacing: 0.3rem;
       text-transform: uppercase;
@@ -97,7 +98,7 @@
     }
 
     .input-container button:hover {
-      background: linear-gradient(135deg, #c01736 0%, #8b17b6 100%);
+      background: linear-gradient(135deg, #051adb 0%, #03aefd 100%);
     }
 
     @media (max-width: 500px) {
@@ -136,38 +137,8 @@
         border-radius: 0.9rem;
         width: 100%; 
       }
+    
  
-
-
-
-
-.news-container ul {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    animation: scroll 25s infinite linear;
-}
-
-.news-container ul li {
-    white-space: nowrap;
-    padding: 10px 24px;
-    color: #ffa500;
-    position: relative;
-}
-
-.news-container ul li::after {
-    content:"";
-    width: 1px;
-    height: 100%;
-    background: #ee82ee;
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.news-container ul li:last-child::after {
-    display: none;
-}
 
 @keyframes scroll {
     from {
@@ -179,7 +150,50 @@
 
     }
 }
+}
+
+@media (max-width: 600px) {
+      #details{
+        display: none;
+      }
     }
+.whatsapp{
+  color: rgb(14, 161, 9);
+
+}
+.repo-div{
+
+  box-shadow: 1px 1px 1px 1px#140e0e5d;
+  transform: translate(100%);
+  width: 70px;
+  /* margin: 10px; */
+  padding: 10px;
+  border: black 2px solid;
+  border-radius: 100px;
+}
+.repo-div:hover{
+  background-color: #000000;
+}
+.repo-link:hover{
+  color: white;
+}
+.repo-link{
+  color: black;
+  text-decoration: none;
+}
+#details{
+  position: absolute;
+  background-color: #1f9dc4;
+  padding: 5px;
+  width: 100px;
+  border: 2px black solid;
+  transform: translateY(900%) translateX(550%);
+  cursor: pointer;
+  border-radius: 100px;
+}
+#details:hover{
+  background-color: #0dc2da;
+}
   </style>
 </head>
 <body>
@@ -187,16 +201,20 @@
     <div class="main">
       <div class="box" id="box">
         <div id="text">
+          <div class="repo-div"> <a class="repo-link" target="_blank" href="https://github.com/HyHamza/BYTE-MD">Repo link</a>  </div>
+          <p id="details" title="When you'll click on the 'OKEY' button, you'll see a code, click on the 'Code' to copy and then at the same time you should receive a 'Notification' from WhatsApp just click on it, and click on the 'link with phone instead' then paste the copied code from your clipboard!">HOVER HERE</p>
           <p>
-            <h3 class="centered-text">Link with your WhatsApp</h3>
+            <h3 class="centered-text">Link with your <i class="whatsapp">WhatsApp</i> </h3>
             <br>
-            <h6>Enter your number with a country code.</h6>
+            <h6>Enter your <i class="whatsapp">WhatsApp</i> Number with a country code.</h6>
             <div class="input-container">
               <input placeholder="+923072380380" type="number" id="number" placeholder="Enter Your Phone number with a Country Code" name="">
               <button id="submit">okey</button>
-            </div>
-            
-            <a id="waiting-message" class="centered-text" style="display: none;">Please wait a while...</a>
+              </div>
+
+
+              
+              <a id="waiting-message" class="centered-text" style="display: none;">Please wait a while...</a>
             <br>
             <br>
             <main id="pair"></main>
@@ -229,7 +247,7 @@
     b.addEventListener("click", async (e) => {
       e.preventDefault();
       if (!c.value) {
-        a.innerHTML = '<a style="color:white;font-weight:bold">Enter your WhatsApp number with a country code</a><br><br>';
+        a.innerHTML = '<a style="color:black;font-weight:bold">Enter your WhatsApp number with a country code</a><br><br>';
       } else if (c.value.replace(/[^0-9]/g, "").length < 11) {
         a.innerHTML = '<a style="color:red;font-weight:bold">Invalid number</a><br><br>';
       } else {

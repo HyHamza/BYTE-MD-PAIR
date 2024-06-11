@@ -58,9 +58,9 @@ router.get('/', async (req, res) => {
 				   let b64data = Buffer.from(data).toString('base64');
 				   let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 	
-				   let Byte_Text =  `
+				   let Byte_Text = `
 *_Your have completed First step!_* \n *Repo Link:* https://github.com/HyHamza/BYTE-MD/ \n *WhatsApp Channel:* https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l \n *Onwer Number:* wa.me/923072380380
-*Have a Nice Day*`
+*Thanks for choosing BYTE-MD created by Hamza (TalkDrove)\n \t\t*Have a Nice Day*`
 	 await Hamza.sendMessage(Hamza.user.id,{text:Byte_Text},{quoted:session})
 
 

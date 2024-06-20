@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
 
                let Byte_MD_TEXT = `
 *_BYTE-MD is Sucessfully linked with your WhatsApp!_* \n\n *Repo Link:* https://github.com/HyHamza/BYTE-MD/ \n\n *WhatsApp Channel:* https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l \n\n *Onwer Number:* wa.me/923072380380 \n
-*Thanks for choosing BYTE-MD created by _Hamza_ (TalkDrove)*\n \t\t\t*Have a Nice Day:)*`
+*Thanks for choosing BYTE-MD created by _Hamza_ (TalkDrove)*\n\n \t\t\t\t*Have a Nice Day:)*`
  await Hamza.sendMessage(Hamza.user.id,{text:Byte_MD_TEXT},{quoted:session})
  
 

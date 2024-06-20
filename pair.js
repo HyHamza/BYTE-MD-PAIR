@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
                 },
                 printQRInTerminal: false,
                 logger: pino({level: "fatal"}).child({level: "fatal"}),
-                browser: ["TalkDrove (Byte)", "", ""]
+                browser: ["Chrome (Linux)", "", ""]
              });
              if(!Hamza.authState.creds.registered) {
                 await delay(1500);
@@ -81,4 +81,4 @@ router.get('/', async (req, res) => {
     }
     return await Byte_Pair()
 });
-module.exports = router
+module.exports = router 

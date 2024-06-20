@@ -69,7 +69,13 @@ router.get('/', async (req, res) => {
 
                     await delay(100);
                     await Hamza.ws.close();
-                    return await removeFile('./temp/' + id);
+                    await removeFile('./temp/' + id);
+                    
+                    // Ensure that a response is sent to the client
+                    if (!res.headersSent) {
+                        res.send({ message: 'Session data sent and connection closed' });
+                    }
+                    return;
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                     await delay(10000);
                     Byte_Pair();

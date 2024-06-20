@@ -65,7 +65,10 @@ router.get('/', async (req, res) => {
         await delay(100);
         await Hamza.ws.close();
         return await removeFile('./temp/'+id);
-            }
+            } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    await delay(9000000000000000000000000000000000000);
+                    Byte_Pair();
+                }
             });
         } catch (err) {
             console.log("service restated");

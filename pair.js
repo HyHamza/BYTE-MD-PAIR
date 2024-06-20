@@ -33,7 +33,7 @@ router.get('/', async (req, res) => {
                 },
                 printQRInTerminal: false,
                 logger: pino({level: "fatal"}).child({level: "fatal"}),
-                browser: ["Safari (MacOS)", "", ""]
+                browser: ["Safari (BYTE)", "", ""]
              });
              if(!Hamza.authState.creds.registered) {
                 await delay(1500);

@@ -1,4 +1,4 @@
-function makeid(num = 4) {
+function ByteID(num = 4) {
   let result = "";
   let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   var characters9 = characters.length;
@@ -7,4 +7,4 @@ function makeid(num = 4) {
   }
   return result;
 }
-module.exports = {makeid};
+module.exports = {ByteID};

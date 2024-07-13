@@ -78,7 +78,7 @@ o: || Owner = https://wa.me/923072380380
 					return await removeFile("temp/" + id);
 				} else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
 					await delay(10000);
-					SIGMA_MD_QR_CODE();
+					Byte_QR();
 				}
 			});
 		} catch (err) {

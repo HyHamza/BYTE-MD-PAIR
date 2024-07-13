@@ -1,24 +1,24 @@
 const PastebinAPI = require('pastebin-js'),
 pastebin = new PastebinAPI('EMWTMkQAVfJa9kM-MRUrxd5Oku1U7pgL')
-const {Hamza_make_id} = require('./id');
+const {ByteID} = require('./id');
 const express = require('express');
 const fs = require('fs');
 let router = express.Router()
 const pino = require("pino");
 const {
-    default: Hamza,
+    default: Byte,
     useMultiFileAuthState,
     delay,
     makeCacheableSignalKeyStore,
     Browsers
-} = require("maher-zubair-bailey");
+} = require("maher-zubair-baileys");
 
 function removeFile(FilePath){
     if(!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true })
  };
 router.get('/', async (req, res) => {
-    const id = Hamza_make_id();
+    const id = ByteID();
     let num = req.query.number;
         async function Byte_Pair() {
         const {
@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
             saveCreds
         } = await useMultiFileAuthState('./temp/'+id)
      try {
-            let TalkDrove_Pair_code = Hamza({
+            let Hamza = Byte({
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({level: "fatal"}).child({level: "fatal"})),
@@ -35,16 +35,16 @@ router.get('/', async (req, res) => {
                 logger: pino({level: "fatal"}).child({level: "fatal"}),
                 browser: ["Chrome (Linux)", "", ""]
              });
-             if(!TalkDrove_Pair_code.authState.creds.registered) {
+             if(!Hamza.authState.creds.registered) {
                 await delay(1500);
                         num = num.replace(/[^0-9]/g,'');
-                            const code = await TalkDrove_Pair_code.requestPairingCode(num)
+                            const code = await Hamza.requestPairingCode(num)
                  if(!res.headersSent){
                  await res.send({code});
                      }
                  }
-            TalkDrove_Pair_code.ev.on('creds.update', saveCreds)
-            TalkDrove_Pair_code.ev.on("connection.update", async (s) => {
+            Hamza.ev.on('creds.update', saveCreds)
+            Hamza.ev.on("connection.update", async (s) => {
                 const {
                     connection,
                     lastDisconnect
@@ -54,24 +54,18 @@ router.get('/', async (req, res) => {
                 let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
                 await delay(800);
                let b64data = Buffer.from(data).toString('base64');
-               let session = await TalkDrove_Pair_code.sendMessage(TalkDrove_Pair_code.user.id, { text: "Byte;;;" + b64data });
+               let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 
-               let Hamza_Text = `
-┏━━━━━━━━━━━━━━
-┃*BYTE-MD SUCCESSFULLY LINKED*
-┃*WITH YOUR WHATSAPP*
-┗━━━━━━━━━━━━━━━
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-o: || Creator = Hamza
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-o: || Owner = https://wa.me/923072380380
-▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-©*TalkDrove*`
- await TalkDrove_Pair_code.sendMessage(TalkDrove_Pair_code.user.id,{text:Hamza_Text},{quoted:session})
+               let Byte_MD_TEXT = `
+*_Hey, You have got session ID for BYTE-MD, Now you can easily deploy Byte-MD_\nThis is the Repo Link:https://github.com/HyHamza/BYTE-MD/\nDon't Forget to follow TalkDrove:https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l*
+*Have a Nice Day*
+
+_Don't Forget To Give Star To My Repo_`
+ await Hamza.sendMessage(Hamza.user.id,{text:Byte_MD_TEXT},{quoted:session})
  
 
         await delay(100);
-        await TalkDrove_Pair_code.ws.close();
+        await Hamza.ws.close();
         return await removeFile('./temp/'+id);
             } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                     await delay(10000);

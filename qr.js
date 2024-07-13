@@ -60,15 +60,15 @@ router.get('/', async (req, res) => {
 	
 				   let Byte_Text = `
 ┏━━━━━━━━━━━━━━
-┃*BYTE-MD SUCCESSFULLY LINKED*
-┃*WITH YOUR WHATSAPP*
+┃ *BYTE-MD SUCCESSFULLY LINKED*
+┃ *WITH YOUR WHATSAPP*
 ┗━━━━━━━━━━━━━━━
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 o: || Creator = Hamza
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 o: || Owner = https://wa.me/923072380380
 ▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-©*TalkDrove*`
+© *TalkDrove* `
 	 await Hamza.sendMessage(Hamza.user.id,{text:Byte_Text},{quoted:session})
 
 

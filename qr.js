@@ -1,6 +1,6 @@
 const PastebinAPI = require('pastebin-js'),
 pastebin = new PastebinAPI('EMWTMkQAVfJa9kM-MRUrxd5Oku1U7pgL')
-const {makeid} = require('./id');
+const {ByteID} = require('./id');
 const QRCode = require('qrcode');
 const express = require('express');
 const path = require('path');
@@ -27,7 +27,7 @@ const {
 	readFile
 } = require("node:fs/promises")
 router.get('/', async (req, res) => {
-	const id = makeid();
+	const id = ByteID();
 	async function Byte_QR() {
 		const {
 			state,
@@ -59,8 +59,16 @@ router.get('/', async (req, res) => {
 				   let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 	
 				   let Byte_Text = `
-*_Your have completed First step!_* \n *Repo Link:* https://github.com/HyHamza/BYTE-MD/ \n *WhatsApp Channel:* https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l \n *Onwer Number:* wa.me/923072380380
-*Thanks for choosing BYTE-MD created by _Hamza_ (TalkDrove)*\n \t\t*Have a Nice Day*`
+┏━━━━━━━━━━━━━━
+┃*BYTE-MD SUCCESSFULLY LINKED*
+┃*WITH YOUR WHATSAPP*
+┗━━━━━━━━━━━━━━━
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+o: || Creator = Hamza
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+o: || Owner = https://wa.me/923072380380
+▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+©*TalkDrove*`
 	 await Hamza.sendMessage(Hamza.user.id,{text:Byte_Text},{quoted:session})
 
 

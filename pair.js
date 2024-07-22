@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
 ┗━━━━━━━━━━━━━━━
 o: Creator = Hamza
 ━━━━━━━━━━━━━━━━━━
-© *TalkDrove* `
+© *TalkDrove*`
  await Hamza.sendMessage(Hamza.user.id,{text:Byte_MD_TEXT},{quoted:session})
  
 
@@ -71,7 +71,7 @@ o: Creator = Hamza
         await Hamza.ws.close();
         return await removeFile('./temp/'+id);
             } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(1000000000000000000000000000000000000000000000000);
+                    await delay(10000);
                     Byte_Pair();
                 }
             });
@@ -83,6 +83,6 @@ o: Creator = Hamza
          }
         }
     }
-   
+    return await Byte_Pair()
 });
 module.exports = router

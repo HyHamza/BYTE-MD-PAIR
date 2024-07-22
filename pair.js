@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
 ┗━━━━━━━━━━━━━━━
 o: Creator = Hamza
 ━━━━━━━━━━━━━━━━━━
-© *TalkDrove** `
+© *TalkDrove* `
  await Hamza.sendMessage(Hamza.user.id,{text:Byte_MD_TEXT},{quoted:session})
  
 

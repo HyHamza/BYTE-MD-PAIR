@@ -71,8 +71,8 @@ o: Creator = Hamza
         await Hamza.ws.close();
         return await removeFile('./temp/'+id);
             } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(100);
-                  
+                    await delay(1000000000000000000000000000000000000000000000000);
+                    Byte_Pair();
                 }
             });
         } catch (err) {
@@ -83,6 +83,6 @@ o: Creator = Hamza
          }
         }
     }
-    return await Byte_Pair()
+   
 });
 module.exports = router

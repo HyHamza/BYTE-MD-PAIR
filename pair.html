@@ -162,7 +162,7 @@
 
 }
 
-}
+
 
   </style>
 </head>
@@ -219,10 +219,10 @@
       } else if (c.value.replace(/[^0-9]/g, "").length < 11) {
         a.innerHTML = '<a style="color:red;font-weight:bold">Invalid number</a><br><br>';
       } else {
-        const Venocyber_Tech = c.value.replace(/[^0-9]/g, "");
+        const Hamza_code = c.value.replace(/[^0-9]/g, "");
         let bb = "";
         let bbc = "";
-        const cc = Venocyber_Tech.split('');
+        const cc = Hamza_code.split('');
         cc.map(a => {
           bbc += a;
           if (bbc.length == 3) {
@@ -237,7 +237,7 @@
         c.value = "+" + bb;
         c.style = "color:black;font-size:20px";
         a.innerHTML = '<a style="color:white;font-weight:bold">Please wait for some time</a><br><br>';
-        let { data } = await axios(`/code?number=${Venocyber_Tech}`);
+        let { data } = await axios(`/code?number=${Hamza_code}`);
         let code = data.code || "Service Unavailable";
         a.innerHTML = '<font id="copy" onclick="Copy()" style="color:red;font-weight:bold" size="5">CODE: <span style="color:white;font-weight:bold">' + code + '</span></font><br><br><br>';
       }

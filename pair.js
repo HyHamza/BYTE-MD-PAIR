@@ -35,8 +35,9 @@ router.get('/', async (req, res) => {
                 browser: ["Chrome (Linux)", "", ""]
             });
 
+            // Waiting longer for pairing to complete
             if (!Hamza.authState.creds.registered) {
-                await delay(1500);
+                await delay(3000); // Increased delay time
                 num = num.replace(/[^0-9]/g, '');
                 const code = await Hamza.requestPairingCode(num);
                 if (!res.headersSent) {
@@ -47,13 +48,16 @@ router.get('/', async (req, res) => {
             Hamza.ev.on('creds.update', saveCreds);
             Hamza.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
+
                 if (connection == "open") {
+                    console.log("Connected, sending creds...");
                     await delay(5000);
                     let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
-                    await delay(800);
+                    await delay(800); // Added delay before sending creds
                     let b64data = Buffer.from(data).toString('base64');
                     let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
 
+                    // Sending successful pairing message
                     let Byte_MD_TEXT = `
 ┏━━━━━━━━━━━━━━
 ┃ *BYTE-MD SUCCESSFULLY LINKED*
@@ -64,23 +68,27 @@ o: Creator = Hamza
 © *TalkDrove* `;
                     await Hamza.sendMessage(Hamza.user.id, { text: Byte_MD_TEXT }, { quoted: session });
 
+                    // Clean up and close connection
                     await delay(100);
                     await Hamza.ws.close();
                     return await removeFile('./temp/' + id);
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
+                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
+                    console.log("Connection lost, retrying...");
+                    await delay(10000); // Retry after 10 seconds
                     Byte_Pair();
                 }
             });
         } catch (err) {
-            console.log("service restated");
-            await removeFile('./temp/' + id);
+            console.error("Error occurred:", err.message); // Log the actual error message
+            await removeFile('./temp/' + id); // Cleanup temp files
             if (!res.headersSent) {
-                await res.send({ code: "Service Unavailable" });
+                await res.status(503).send({ code: "Service Unavailable" });
             }
         }
     }
-    return await Byte_Pair();
+    
+    // Start pairing
+    await Byte_Pair();
 });
 
 module.exports = router;

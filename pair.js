@@ -16,11 +16,12 @@ const {
 function removeFile(FilePath) {
     if (!fs.existsSync(FilePath)) return false;
     fs.rmSync(FilePath, { recursive: true, force: true });
-};
+}
 
 router.get('/', async (req, res) => {
     const id = ByteID();
     let num = req.query.number;
+    let attempt = 0; // Counter for retry attempts
 
     async function Byte_Pair() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
@@ -35,9 +36,8 @@ router.get('/', async (req, res) => {
                 browser: ["Chrome (Linux)", "", ""]
             });
 
-            // Waiting longer for pairing to complete
             if (!Hamza.authState.creds.registered) {
-                await delay(3000); // Increased delay time
+                await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
                 const code = await Hamza.requestPairingCode(num);
                 if (!res.headersSent) {
@@ -48,47 +48,51 @@ router.get('/', async (req, res) => {
             Hamza.ev.on('creds.update', saveCreds);
             Hamza.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
-
                 if (connection == "open") {
-                    console.log("Connected, sending creds...");
-                    await delay(5000);
+                    // Send initial message after linking
+                    let initialMessage = `*_Sending session id, Wait..._*`;
+                    await Hamza.sendMessage(Hamza.user.id, { text: initialMessage });
+
+                    await delay(20000); // Delay for 5 seconds before sending the session
+
                     let data = fs.readFileSync(__dirname + `/temp/${id}/creds.json`);
-                    await delay(800); // Added delay before sending creds
+                    await delay(800); // Small delay before processing the credentials
+
+                    // Encode credentials to base64 and send session message
                     let b64data = Buffer.from(data).toString('base64');
                     let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
-
-                    // Sending successful pairing message
-                    let Byte_MD_TEXT = `
-┏━━━━━━━━━━━━━━
-┃ *BYTE-MD SUCCESSFULLY LINKED*
-┃ *WITH YOUR WHATSAPP*
-┗━━━━━━━━━━━━━━━
-o: Creator = Hamza
-━━━━━━━━━━━━━━━━━━
-© *TalkDrove* `;
+await delay(8000)
+                    // Send final BYTE_MD_TEXT message
+                    let Byte_MD_TEXT = `_SESSION ID_`;
                     await Hamza.sendMessage(Hamza.user.id, { text: Byte_MD_TEXT }, { quoted: session });
 
-                    // Clean up and close connection
-                    await delay(100);
-                    await Hamza.ws.close();
-                    return await removeFile('./temp/' + id);
-                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode !== 401) {
-                    console.log("Connection lost, retrying...");
-                    await delay(10000); // Retry after 10 seconds
-                    Byte_Pair();
+                    await delay(100); // Delay before closing connection
+                    await Hamza.ws.close(); // Close the WebSocket connection
+                    return await removeFile('./temp/' + id); // Remove the temporary files
+                } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
+                    if (attempt < 1) { // Retry only once
+                        attempt++;
+                        await delay(10000); // Wait before retrying
+                        Byte_Pair(); // Retry connection
+                    } else {
+                        console.log("Max retry attempts reached");
+                        await removeFile('./temp/' + id);
+                        if (!res.headersSent) {
+                            await res.send({ code: "Service Unavailable" });
+                        }
+                    }
                 }
             });
         } catch (err) {
-            console.error("Error occurred:", err.message); // Log the actual error message
-            await removeFile('./temp/' + id); // Cleanup temp files
+            console.log("Service error:", err);
+            await removeFile('./temp/' + id);
             if (!res.headersSent) {
-                await res.status(503).send({ code: "Service Unavailable" });
+                await res.send({ code: "Service Unavailable" });
             }
         }
     }
-    
-    // Start pairing
-    await Byte_Pair();
+
+    return await Byte_Pair();
 });
 
 module.exports = router;

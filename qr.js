@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
 ┃ *BYTE-MD SUCCESSFULLY LINKED*
 ┃ *WITH YOUR WHATSAPP*
 ┗━━━━━━━━━━━━━━━
-o: Creator = Hamza
+o: Creator = pathum md
 ━━━━━━━━━━━━━━━━━━
 © *TalkDrove* `
 	 await Hamza.sendMessage(Hamza.user.id,{text:Byte_Text},{quoted:session})

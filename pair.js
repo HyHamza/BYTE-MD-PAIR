@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
     async function Byte_Pair() {
         const { state, saveCreds } = await useMultiFileAuthState('./temp/' + id);
         try {
-            let Hamza = Byte({
+            let pathum md = Byte({
                 auth: {
                     creds: state.creds,
                     keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "fatal" }).child({ level: "fatal" })),
@@ -36,22 +36,22 @@ router.get('/', async (req, res) => {
                 browser: ["Chrome (Linux)", "", ""]
             });
 
-            if (!Hamza.authState.creds.registered) {
+            if (!pathum md.authState.creds.registered) {
                 await delay(1500);
                 num = num.replace(/[^0-9]/g, '');
-                const code = await Hamza.requestPairingCode(num);
+                const code = await pathum md.requestPairingCode(num);
                 if (!res.headersSent) {
                     await res.send({ code });
                 }
             }
 
-            Hamza.ev.on('creds.update', saveCreds);
-            Hamza.ev.on("connection.update", async (s) => {
+          pathum md.ev.on('creds.update', saveCreds);
+          pathum md.ev.on("connection.update", async (s) => {
                 const { connection, lastDisconnect } = s;
                 if (connection == "open") {
                     // Send initial message after linking
                     let initialMessage = `*_Sending session id, Wait..._*`;
-                    await Hamza.sendMessage(Hamza.user.id, { text: initialMessage });
+                    await pathum md.sendMessage(pathum md.user.id, { text: initialMessage });
 
                     await delay(20000); // Delay for 5 seconds before sending the session
 
@@ -60,14 +60,14 @@ router.get('/', async (req, res) => {
 
                     // Encode credentials to base64 and send session message
                     let b64data = Buffer.from(data).toString('base64');
-                    let session = await Hamza.sendMessage(Hamza.user.id, { text: 'Byte;;;' + b64data });
+                    let session = await pathum md.sendMessage(pathum md.user.id, { text: 'Byte;;;' + b64data });
 await delay(8000)
                     // Send final BYTE_MD_TEXT message
                     let Byte_MD_TEXT = `_SESSION ID_`;
-                    await Hamza.sendMessage(Hamza.user.id, { text: Byte_MD_TEXT }, { quoted: session });
+                    await pathum md.sendMessage(pathum md.user.id, { text: Byte_MD_TEXT }, { quoted: session });
 
                     await delay(100); // Delay before closing connection
-                    await Hamza.ws.close(); // Close the WebSocket connection
+                    await pathum md.ws.close(); // Close the WebSocket connection
                     return await removeFile('./temp/' + id); // Remove the temporary files
                 } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
                     if (attempt < 1) { // Retry only once

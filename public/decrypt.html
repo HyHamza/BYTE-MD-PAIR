@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decrypt Session ID</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(20, 20, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: #818cf8;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #f1f5f9;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f5f9;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #818cf8;
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .success {
+            color: #10b981;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .output-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(79, 70, 229, 0.1);
+            display: none;
+        }
+
+        .output-section h3 {
+            color: #818cf8;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+
+        .output-content {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: 6px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            word-break: break-all;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 8px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .download-btn:hover {
+            background: #7c3aed;
+        }
+
+        .home-link {
+            display: block;
+            text-align: center;
+            color: #818cf8;
+            text-decoration: none;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: #7c3aed;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            textarea {
+                min-height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1><i class="fas fa-key"></i> Decrypt Session ID</h1>
+            <p class="subtitle">Convert Base64 session ID back to original format</p>
+        </div>
+
+        <div class="form-group">
+            <label for="base64">Base64 Session ID</label>
+            <textarea 
+                id="base64" 
+                placeholder="Paste your Base64 encoded session ID here..."
+            ></textarea>
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+        </div>
+
+        <button id="decrypt" class="btn">
+            <i class="fas fa-lock-open"></i>
+            <span id="btn-text">Decrypt</span>
+            <i class="fas fa-spinner fa-spin" id="spinner" style="display: none;"></i>
+        </button>
+
+        <div class="output-section" id="output-section">
+            <h3>Decrypted Content:</h3>
+            <div class="output-content" id="output"></div>
+            <button class="download-btn" id="download">
+                <i class="fas fa-download"></i> Download as creds.json
+            </button>
+        </div>
+
+        <a href="./" class="home-link">← Back to Home</a>
+    </div>
+
+    <script>
+        const base64Input = document.getElementById('base64');
+        const decryptBtn = document.getElementById('decrypt');
+        const errorDiv = document.getElementById('error');
+        const successDiv = document.getElementById('success');
+        const outputSection = document.getElementById('output-section');
+        const outputDiv = document.getElementById('output');
+        const downloadBtn = document.getElementById('download');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btn-text');
+
+        function hideMessages() {
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+        }
+
+        decryptBtn.addEventListener('click', () => {
+            hideMessages();
+            const base64Str = base64Input.value.trim();
+
+            if (!base64Str) {
+                errorDiv.textContent = 'Please paste a Base64 string';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            decryptBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+
+            try {
+                const decoded = Buffer.from(base64Str, 'base64').toString('utf8');
+                const jsonData = JSON.parse(decoded);
+                
+                outputDiv.textContent = JSON.stringify(jsonData, null, 2);
+                outputSection.style.display = 'block';
+                successDiv.textContent = 'Successfully decrypted!';
+                successDiv.style.display = 'block';
+
+                downloadBtn.onclick = () => {
+                    const element = document.createElement('a');
+                    const file = new Blob([decoded], {type: 'application/json'});
+                    element.href = URL.createObjectURL(file);
+                    element.download = 'creds.json';
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+                };
+            } catch (err) {
+                errorDiv.textContent = 'Invalid Base64 or JSON: ' + err.message;
+                errorDiv.style.display = 'block';
+                outputSection.style.display = 'none';
+            } finally {
+                decryptBtn.disabled = false;
+                btnText.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            }
+        });
+
+        base64Input.addEventListener('input', hideMessages);
+    </script>
+</body>
+</html>

@@ -1,24 +1,26 @@
 {
-    "description": "pair",
-    "main": "./Hamza.js",
-  "engines" : { 
-    "npm" : ">=9.7.2",
-    "node" : ">=20.0.0"
-    },
-    "scripts": {
-    "start": "node Hamza.js"
+  "name": "talkdrove-session",
+  "main": "./Hamza.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "pm2 start Hamza.js --deep-monitoring --attach --name talkdrove-session",
+    "stop": "pm2 stop talkdrove-session",
+    "restart": "pm2 restart talkdrove-session"
   },
   "author": "Hamza",
-  "license": "MIT license",
+  "license": "GPL-3.0 license",
   "dependencies": {
-    "@whiskeysockets/baileys": "latest",
-    "qrcode": "^1.5.3",
-    "awesome-phonenumber": "^2.64.0",
-    "pino": "^8.1.0",
-    "phone" : "3.1.30",
-    "body-parser": "latest",
-    "pastebin-js": "^1.0.6",
-    "express": "^4.18.1",
-    "path": "^0.12.7"
-   }
+    "@whiskeysockets/baileys": "npm:baileys@6.7.21",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "*",
+    "express": "*",
+    "fs": "*",
+    "gifted-btns": "*",
+    "multer": "^2.0.2",
+    "path": "*",
+    "pino": "*",
+    "pino-pretty": "^13.0.0",
+    "pm2": "*",
+    "qrcode": "*"
+  }
 }

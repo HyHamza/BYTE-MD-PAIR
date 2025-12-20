@@ -1,0 +1,17 @@
+{
+    "name": "Session Generator",
+    "description": "Web Session Generator",
+    "logo": "",
+    "repository": "https://github.com/HyHamza/Session-Generator",
+    "keywords": ["TalkDrove"],
+    "success_url": "/", 
+    "buildpacks": [{ "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" } ],
+    "env": {      
+      "PORT": {
+        "description": "Port for web app.4000,5000,3000... any!",
+        "value": "50900",
+        "required": false 
+      }
+    }   
+
+}

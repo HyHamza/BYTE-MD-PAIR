@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validate Session</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 500px;
+            background: rgba(20, 20, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+            color: #818cf8;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab.active {
+            color: #818cf8;
+            border-bottom-color: #818cf8;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #f1f5f9;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(79, 70, 229, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #f1f5f9;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #818cf8;
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        textarea {
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 120px;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-label {
+            display: block;
+            padding: 10px 12px;
+            border: 1px dashed rgba(79, 70, 229, 0.5);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.02);
+            color: #818cf8;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .file-label:hover {
+            border-color: #818cf8;
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .file-name {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: none;
+        }
+
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .result.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #10b981;
+        }
+
+        .result.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        .result h3 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result p {
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .status-details {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid currentColor;
+            opacity: 0.8;
+            font-size: 0.85rem;
+        }
+
+        .home-link {
+            display: block;
+            text-align: center;
+            color: #818cf8;
+            text-decoration: none;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: #7c3aed;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <h1><i class="fas fa-check-circle"></i> Validate Session</h1>
+            <p class="subtitle">Test if your session is valid</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="base64">Base64 ID</button>
+            <button class="tab" data-tab="file">Creds File</button>
+        </div>
+
+        <div class="tab-content active" id="base64-tab">
+            <div class="form-group">
+                <label for="base64-input">Base64 Session ID</label>
+                <textarea 
+                    id="base64-input" 
+                    placeholder="Paste your Base64 encoded session ID..."
+                ></textarea>
+                <div class="error" id="base64-error"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="file-tab">
+            <div class="form-group">
+                <label>Upload creds.json</label>
+                <div class="file-upload">
+                    <input type="file" id="file-input" accept=".json" />
+                    <label for="file-input" class="file-label">
+                        <i class="fas fa-cloud-upload-alt"></i> Click to upload or drag & drop
+                    </label>
+                    <div class="file-name" id="file-name"></div>
+                </div>
+                <div class="error" id="file-error"></div>
+            </div>
+        </div>
+
+        <button id="validate" class="btn">
+            <i class="fas fa-check"></i>
+            <span id="btn-text">Validate</span>
+            <i class="fas fa-spinner fa-spin" id="spinner" style="display: none;"></i>
+        </button>
+
+        <div class="result" id="result"></div>
+
+        <a href="./" class="home-link">← Back to Home</a>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const validateBtn = document.getElementById('validate');
+        const resultDiv = document.getElementById('result');
+        const spinner = document.getElementById('spinner');
+        const btnText = document.getElementById('btn-text');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+
+        let currentTab = 'base64';
+        let selectedFile = null;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                currentTab = tab.dataset.tab;
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(currentTab + '-tab').classList.add('active');
+                resultDiv.style.display = 'none';
+            });
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                fileName.textContent = '✓ ' + selectedFile.name + ' selected';
+            } else {
+                fileName.textContent = '';
+            }
+        });
+
+        // Drag and drop
+        const fileLabel = document.querySelector('.file-label');
+        fileLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileLabel.style.background = 'rgba(79, 70, 229, 0.1)';
+        });
+
+        fileLabel.addEventListener('dragleave', () => {
+            fileLabel.style.background = 'rgba(255, 255, 255, 0.02)';
+        });
+
+        fileLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileLabel.style.background = 'rgba(255, 255, 255, 0.02)';
+            if (e.dataTransfer.files[0]) {
+                fileInput.files = e.dataTransfer.files;
+                selectedFile = e.dataTransfer.files[0];
+                fileName.textContent = '✓ ' + selectedFile.name + ' selected';
+            }
+        });
+
+        validateBtn.addEventListener('click', async () => {
+            resultDiv.style.display = 'none';
+            validateBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+
+            try {
+                let formData = new FormData();
+                
+                if (currentTab === 'base64') {
+                    const base64Input = document.getElementById('base64-input').value.trim();
+                    if (!base64Input) {
+                        showError('Please paste a Base64 string', 'base64');
+                        return;
+                    }
+                    formData.append('format', 'base64');
+                    formData.append('data', base64Input);
+                } else {
+                    if (!selectedFile) {
+                        showError('Please select a creds.json file', 'file');
+                        return;
+                    }
+                    formData.append('format', 'file');
+                    formData.append('file', selectedFile);
+                }
+
+                const response = await axios.post('/validate', formData, {
+                    headers: {
+                        'Content-Type': currentTab === 'base64' ? 'application/x-www-form-urlencoded' : 'multipart/form-data'
+                    }
+                });
+
+                showResult(response.data.valid, response.data.message, response.data.details);
+            } catch (err) {
+                const message = err.response?.data?.message || err.message || 'Validation failed';
+                showResult(false, message, err.response?.data?.details);
+            } finally {
+                validateBtn.disabled = false;
+                btnText.style.display = 'inline-block';
+                spinner.style.display = 'none';
+            }
+        });
+
+        function showError(message, tab) {
+            document.getElementById(tab + '-error').textContent = message;
+            document.getElementById(tab + '-error').style.display = 'block';
+            validateBtn.disabled = false;
+            btnText.style.display = 'inline-block';
+            spinner.style.display = 'none';
+        }
+
+        function showResult(isValid, message, details) {
+            resultDiv.className = 'result ' + (isValid ? 'success' : 'error');
+            resultDiv.innerHTML = `
+                <h3>
+                    <i class="fas fa-${isValid ? 'check-circle' : 'times-circle'}"></i>
+                    ${isValid ? 'Valid Session' : 'Invalid Session'}
+                </h3>
+                <p>${message}</p>
+                ${details ? '<div class="status-details"><strong>Details:</strong><br>' + details + '</div>' : ''}
+            `;
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

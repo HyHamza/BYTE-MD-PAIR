@@ -1,8 +1,6 @@
 # Session Generator
 
-> ✨ Generate WhatsApp sessions like a pro. Stop copy-pasting credentials like it's 2015.
-
-A blazing-fast, no-nonsense WhatsApp session generator. Supports both **Pair Code** and **QR Code** methods. Deploy it, forget it, let it do the work while you sleep.
+A well maintained session generator. Supports both **Pair Code** and **QR Code** methods. Deploy it, forget it, let it do the work while you sleep.
 
 ---
 

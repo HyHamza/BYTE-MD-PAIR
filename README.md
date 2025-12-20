@@ -4,7 +4,7 @@ A well maintained session generator. Supports both **Pair Code** and **QR Code**
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Node.js** v14+ (seriously, if you're still on v12, we can't be friends)
@@ -41,13 +41,13 @@ npm start
 
 ## 📋 Features
 
-- ✅ **Pair Code Generation** - Traditional WhatsApp pairing
-- ✅ **QR Code Scanning** - The cool kids method
-- ✅ **Session Validation** - Verify your sessions actually work (you'd be surprised how many don't)
-- ✅ **Base64 Decryption** - Decrypt those gnarly Base64 strings
-- ✅ **Real-time Status Updates** - Watch the magic happen with SSE
-- ✅ **Dual Format Delivery** - Get creds.json file OR Base64 compressed ID
-- ✅ **Interactive Buttons** - Copy & share like a boss 🔥
+- **Pair Code Generation** - Traditional WhatsApp pairing
+- **QR Code Scanning** - The cool kids method
+- **Session Validation** - Verify your sessions actually work (you'd be surprised how many don't)
+- **Base64 Decryption** - Decrypt those gnarly Base64 strings
+- **Real-time Status Updates** - Watch the magic happen with SSE
+- **Dual Format Delivery** - Get creds.json file OR Base64 compressed ID
+- **Interactive Buttons** - Copy & share like a boss 🔥
 
 ---
 

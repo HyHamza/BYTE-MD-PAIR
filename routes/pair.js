@@ -267,7 +267,7 @@ router.get('/', async (req, res) => {
                   await sendButtons(whatsapp, whatsapp.user.id, {
                     title: '✅ Session Ready',
                     text: `\`\`\`${b64}\`\`\``,
-                    footer: '> *Powered By TalkDrove*\n> ⚠️ Keep this session private and secure!',
+                    footer: '> ⚠️ Keep this session private and secure',
                     buttons: [
                       {
                         name: 'cta_copy',
@@ -305,7 +305,7 @@ router.get('/', async (req, res) => {
                     document: credsData,
                     mimetype: 'application/json',
                     fileName: 'creds.json',
-                    caption: '✅ Your WhatsApp session credentials\n\n⚠️ Keep this file secure and private!',
+                    caption: '> ⚠️ Keep this file secure and private!',
                   });
                 }
 

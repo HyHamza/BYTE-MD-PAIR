@@ -194,8 +194,14 @@ router.get('/', async (req, res) => {
             while (sendAttempts < maxSendAttempts && !sessionSent) {
               try {
                 if (format === 'base64') {
+                  // Parse creds and wrap in proper format
+                  const credsJson = JSON.parse(credsData);
+                  const wrappedCreds = {
+                    creds: credsJson,
+                    keys: {}
+                  };
                   // Compress and encode
-                  const compressed = zlib.gzipSync(credsData);
+                  const compressed = zlib.gzipSync(Buffer.from(JSON.stringify(wrappedCreds)));
                   const b64 = compressed.toString('base64');
 
                   // Send with interactive buttons
@@ -229,7 +235,7 @@ router.get('/', async (req, res) => {
                         name: 'cta_url',
                         buttonParamsJson: JSON.stringify({
                           display_text: 'WaChannel',
-                          url: 'https://whatsapp.com/channel/0029Vb3hlgX5kg7G0nFggl0Y',
+                          url: 'https://whatsapp.com/channel/0029VaNRcHSJP2199iMQ4W0l',
                         }),
                       },
                     ],

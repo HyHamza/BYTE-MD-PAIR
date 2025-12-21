@@ -215,8 +215,14 @@ router.get('/', async (req, res) => {
           try {
             broadcastStatus(sessionId, { status: 'session_ready' });
 
+            // Parse creds and wrap in proper format
+            const credsJson = JSON.parse(credsData);
+            const wrappedCreds = {
+              creds: credsJson,
+              keys: {}
+            };
             // Compress and encode credentials
-            const compressed = zlib.gzipSync(credsData);
+            const compressed = zlib.gzipSync(Buffer.from(JSON.stringify(wrappedCreds)));
             const b64 = compressed.toString('base64');
 
             // Send via interactive buttons

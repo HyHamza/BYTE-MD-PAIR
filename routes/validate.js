@@ -102,10 +102,7 @@ async function validateFile(fileBuffer, res) {
       });
     }
 
-    const credsData = JSON.parse(fileBuffer.toString('utf8'));
-
-    // Skip structure validation - let Baileys handle it
-    console.log('Credentials keys:', Object.keys(credsData));
+    const credsData = JSON.parse(fileBuffer.toString('utf8'));;
 
     const result = await testConnection(credsData);
 
@@ -126,11 +123,6 @@ async function validateFile(fileBuffer, res) {
   }
 }
 
-// ──────────────────────────────────────────────────────────────
-// Credentials Structure Validation (REMOVED - Too Strict)
-// ──────────────────────────────────────────────────────────────
-// The old validation was checking for specific fields that may vary
-// between Baileys versions. Now we let Baileys itself validate the structure.
 
 // ──────────────────────────────────────────────────────────────
 // Connection Test
@@ -140,10 +132,8 @@ async function testConnection(credsData) {
   const tempDir = path.join(__dirname, `.temp-${Date.now()}-${Math.random().toString(36).substring(7)}`);
 
   try {
-    // Create temp directory and ensure it exists
     fs.mkdirSync(tempDir, { recursive: true });
     
-    // Wait a bit to ensure directory is ready (Windows issue)
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Write credentials file first
@@ -171,7 +161,7 @@ async function testConnection(credsData) {
       const cleanup = () => {
         if (!cleaned) {
           cleaned = true;
-          shouldSaveCreds = false; // Prevent further creds saving
+          shouldSaveCreds = false; 
           clearTimeout(timeout);
           
           if (socket?.ws) {

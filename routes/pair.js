@@ -68,15 +68,12 @@ function validateCredsFile(filePath) {
 
     const stats = fs.statSync(filePath);
     
-    // Check minimum file size (valid creds.json is typically > 500 bytes)
-    if (stats.size < 500) {
+    if (stats.size < 1000) {
       return false;
     }
 
-    // Validate JSON structure
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     
-    // Check for required fields
     if (!data.me || !data.me.id || !data.noiseKey || !data.signedIdentityKey) {
       return false;
     }

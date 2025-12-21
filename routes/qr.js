@@ -1,7 +1,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const zlib = require('zlib');
 const QRCode = require('qrcode');
 const pino = require('pino');
 const { sendButtons } = require('gifted-btns');
@@ -12,10 +11,10 @@ const {
   Browsers,
   delay,
   fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
 } = require('@whiskeysockets/baileys');
 
 const { GenID, removeFile } = require('../lib');
-
 
 // ──────────────────────────────────────────────────────────────
 // Configuration
@@ -25,10 +24,37 @@ const router = express.Router();
 const sessionDir = path.join(__dirname, 'session');
 const activeConnections = new Map();
 
+// ──────────────────────────────────────────────────────────────
+// Validation Utilities
+// ──────────────────────────────────────────────────────────────
+
+function validateCredsFile(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return false;
+    }
+
+    const stats = fs.statSync(filePath);
+    
+    if (stats.size < 1000) {
+      return false;
+    }
+
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    
+    if (!data.me || !data.me.id || !data.noiseKey || !data.signedIdentityKey) {
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Validation error:', err);
+    return false;
+  }
+}
 
 // ──────────────────────────────────────────────────────────────
 // Status Broadcasting via SSE
-// Real-time updates to connected clients
 // ──────────────────────────────────────────────────────────────
 
 router.get('/status/:id', (req, res) => {
@@ -69,10 +95,8 @@ function broadcastStatus(id, status) {
   }
 }
 
-
 // ──────────────────────────────────────────────────────────────
 // QR Code Generation Route
-// Where the magic happens ✨
 // ──────────────────────────────────────────────────────────────
 
 router.get('/', async (req, res) => {
@@ -82,7 +106,11 @@ router.get('/', async (req, res) => {
 
   async function cleanSession() {
     if (!sessionCleaned) {
-      await removeFile(path.join(sessionDir, sessionId));
+      try {
+        await removeFile(path.join(sessionDir, sessionId));
+      } catch (err) {
+        console.error('Cleanup error:', err);
+      }
       sessionCleaned = true;
     }
   }
@@ -96,10 +124,21 @@ router.get('/', async (req, res) => {
     try {
       const whatsapp = TalkDroveConnect({
         version,
-        auth: state,
+        auth: {
+          creds: state.creds,
+          keys: makeCacheableSignalKeyStore(
+            state.keys,
+            pino({ level: 'silent' })
+          ),
+        },
         printQRInTerminal: false,
         logger: pino({ level: 'silent' }),
         browser: Browsers.macOS('Desktop'),
+        syncFullHistory: false,
+        generateHighQualityLinkPreview: true,
+        shouldIgnoreJid: (jid) => !!jid?.endsWith('@g.us'),
+        getMessage: async () => undefined,
+        markOnlineOnConnect: true,
         connectTimeoutMs: 60000,
         keepAliveIntervalMs: 30000,
       });
@@ -110,91 +149,244 @@ router.get('/', async (req, res) => {
 
         // QR Code generated - send HTML page
         if (qr && !responseSent) {
-          const qrImage = await QRCode.toDataURL(qr);
+          try {
+            const qrImage = await QRCode.toDataURL(qr);
 
-          if (!res.headersSent) {
-            res.send(`
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>QR Code</title>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-                <style>
-                  * { margin: 0; padding: 0; box-sizing: border-box; }
-                  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000000; color: #f1f5f9; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-                  .card { width: 100%; max-width: 450px; background: rgba(20, 20, 30, 0.8); backdrop-filter: blur(10px); border-radius: 12px; padding: 2rem; border: 1px solid rgba(79, 70, 229, 0.2); text-align: center; }
-                  h1 { color: #818cf8; margin-bottom: 0.5rem; }
-                  p { color: #94a3b8; margin-bottom: 1.5rem; font-size: 0.95rem; }
-                  .qr { background: white; border-radius: 12px; padding: 1rem; margin: 1.5rem 0; }
-                  .qr img { max-width: 100%; height: auto; }
-                  .status { font-size: 0.9rem; color: #94a3b8; margin: 1rem 0; }
-                  .dot { display: inline-block; width: 6px; height: 6px; background: #818cf8; border-radius: 50%; margin-right: 6px; animation: pulse 1.5s infinite; }
-                  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-                  .back { display: block; margin-top: 1rem; color: #818cf8; text-decoration: none; font-size: 0.9rem; }
-                  .back:hover { color: #7c3aed; }
-                  @media (max-width: 480px) { .card { padding: 1.5rem; } }
-                </style>
-              </head>
-              <body>
-                <div class="card">
-                  <h1><i class="fas fa-qrcode"></i> Scan QR Code</h1>
-                  <p>Point your camera at this QR code</p>
-                  <div class="qr">
-                    <img src="${qrImage}" alt="QR Code">
+            if (!res.headersSent) {
+              res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>Scan QR Code - TalkDrove</title>
+                  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                  <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body { 
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: #f1f5f9; 
+                      min-height: 100vh; 
+                      display: flex; 
+                      justify-content: center; 
+                      align-items: center; 
+                      padding: 20px; 
+                    }
+                    .card { 
+                      width: 100%; 
+                      max-width: 450px; 
+                      background: rgba(255, 255, 255, 0.95); 
+                      backdrop-filter: blur(10px); 
+                      border-radius: 16px; 
+                      padding: 2.5rem; 
+                      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                      text-align: center; 
+                    }
+                    h1 { 
+                      color: #667eea; 
+                      margin-bottom: 0.5rem; 
+                      font-size: 1.75rem;
+                    }
+                    .subtitle { 
+                      color: #64748b; 
+                      margin-bottom: 1.5rem; 
+                      font-size: 0.95rem; 
+                    }
+                    .qr-container { 
+                      background: white; 
+                      border-radius: 12px; 
+                      padding: 1.5rem; 
+                      margin: 1.5rem 0; 
+                      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    }
+                    .qr-container img { 
+                      max-width: 100%; 
+                      height: auto; 
+                      display: block;
+                    }
+                    .status { 
+                      font-size: 0.95rem; 
+                      color: #64748b; 
+                      margin: 1.5rem 0; 
+                      padding: 1rem;
+                      background: #f1f5f9;
+                      border-radius: 8px;
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      gap: 0.5rem;
+                    }
+                    .spinner { 
+                      display: inline-block; 
+                      width: 16px; 
+                      height: 16px; 
+                      border: 2px solid #e2e8f0;
+                      border-top: 2px solid #667eea;
+                      border-radius: 50%; 
+                      animation: spin 1s linear infinite; 
+                    }
+                    @keyframes spin { 
+                      0% { transform: rotate(0deg); } 
+                      100% { transform: rotate(360deg); } 
+                    }
+                    .instructions {
+                      text-align: left;
+                      margin: 1.5rem 0;
+                      padding: 1rem;
+                      background: #f8fafc;
+                      border-radius: 8px;
+                      border-left: 3px solid #667eea;
+                    }
+                    .instructions h3 {
+                      color: #334155;
+                      font-size: 0.9rem;
+                      margin-bottom: 0.5rem;
+                      font-weight: 600;
+                    }
+                    .instructions ol {
+                      color: #64748b;
+                      font-size: 0.85rem;
+                      padding-left: 1.25rem;
+                      line-height: 1.6;
+                    }
+                    .instructions li {
+                      margin-bottom: 0.25rem;
+                    }
+                    .back { 
+                      display: inline-block;
+                      margin-top: 1rem; 
+                      color: #667eea; 
+                      text-decoration: none; 
+                      font-size: 0.9rem;
+                      padding: 0.5rem 1rem;
+                      border-radius: 6px;
+                      transition: all 0.2s;
+                    }
+                    .back:hover { 
+                      background: #f1f5f9;
+                    }
+                    .success { 
+                      background: #dcfce7; 
+                      color: #166534;
+                      border-left-color: #22c55e;
+                    }
+                    .error { 
+                      background: #fee2e2; 
+                      color: #991b1b;
+                      border-left-color: #ef4444;
+                    }
+                    @media (max-width: 480px) { 
+                      .card { padding: 1.5rem; }
+                      h1 { font-size: 1.5rem; }
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="card">
+                    <h1><i class="fas fa-qrcode"></i> Scan QR Code</h1>
+                    <p class="subtitle">Open WhatsApp on your phone and scan this code</p>
+                    
+                    <div class="qr-container">
+                      <img src="${qrImage}" alt="QR Code">
+                    </div>
+                    
+                    <div class="instructions">
+                      <h3><i class="fas fa-info-circle"></i> How to scan:</h3>
+                      <ol>
+                        <li>Open WhatsApp on your phone</li>
+                        <li>Tap <strong>Menu</strong> or <strong>Settings</strong></li>
+                        <li>Tap <strong>Linked Devices</strong></li>
+                        <li>Tap <strong>Link a Device</strong></li>
+                        <li>Point your phone at this screen to scan the code</li>
+                      </ol>
+                    </div>
+                    
+                    <div class="status" id="status-container">
+                      <span class="spinner"></span>
+                      <span id="status">Waiting for scan...</span>
+                    </div>
+                    
+                    <a href="./" class="back"><i class="fas fa-arrow-left"></i> Back to Home</a>
                   </div>
-                  <div class="status">
-                    <span class="dot"></span>
-                    <span id="status">Waiting for scan...</span>
-                  </div>
-                  <a href="./" class="back">← Back to Home</a>
-                </div>
-                <script>
-                  const sessionId = '${sessionId}';
-                  new EventSource(\`/qr/status/\${sessionId}\`).onmessage = e => {
-                    const data = JSON.parse(e.data);
-                    const statusMessages = {
-                      connecting: 'Connecting...',
-                      downloading_creds: 'Getting credentials...',
-                      session_ready: 'Done!'
+                  
+                  <script>
+                    const sessionId = '${sessionId}';
+                    const statusEl = document.getElementById('status');
+                    const statusContainer = document.getElementById('status-container');
+                    
+                    const eventSource = new EventSource(\`/qr/status/\${sessionId}\`);
+                    
+                    eventSource.onmessage = (e) => {
+                      try {
+                        const data = JSON.parse(e.data);
+                        
+                        const statusMessages = {
+                          pending: 'Waiting for scan...',
+                          connecting: 'Connecting to WhatsApp...',
+                          syncing_session: 'Syncing your session...',
+                          downloading_creds: 'Downloading credentials...',
+                          sending_session: 'Sending session to your WhatsApp...',
+                          session_ready: '✓ Session created successfully!',
+                          error: '✗ Something went wrong. Please try again.'
+                        };
+                        
+                        statusEl.textContent = statusMessages[data.status] || 'Processing...';
+                        
+                        if (data.status === 'session_ready') {
+                          statusContainer.classList.add('success');
+                          statusContainer.querySelector('.spinner')?.remove();
+                          setTimeout(() => window.location.href = './', 3000);
+                        } else if (data.status === 'error') {
+                          statusContainer.classList.add('error');
+                          statusContainer.querySelector('.spinner')?.remove();
+                        }
+                      } catch (err) {
+                        console.error('SSE parse error:', err);
+                      }
                     };
-                    document.getElementById('status').textContent = statusMessages[data.status] || 'Processing...';
-                    if (data.status === 'session_ready') setTimeout(() => window.location.href = './', 2000);
-                  };
-                </script>
-              </body>
-              </html>
-            `);
-            responseSent = true;
-          }
+                    
+                    eventSource.onerror = () => {
+                      statusEl.textContent = 'Connection lost. Please refresh.';
+                      statusContainer.classList.add('error');
+                      statusContainer.querySelector('.spinner')?.remove();
+                    };
+                  </script>
+                </body>
+                </html>
+              `);
+              responseSent = true;
+            }
 
-          broadcastStatus(sessionId, { status: 'pending' });
+            broadcastStatus(sessionId, { status: 'pending' });
+          } catch (err) {
+            console.error('QR generation error:', err);
+            if (!res.headersSent) {
+              res.status(500).json({ error: 'Failed to generate QR code' });
+            }
+          }
         }
 
         // Connected - download credentials
         if (connection === 'open') {
           broadcastStatus(sessionId, { status: 'connecting' });
-          await whatsapp.groupAcceptInvite('GiD4BYjebncLvhr0J2SHAg');
-          await delay(10000);
+          
+      
+          await delay(5000);
 
-          // Retrieve credentials
           let credsData = null;
           let attempts = 0;
-          const maxAttempts = 10;
+          const maxAttempts = 20;
 
-          broadcastStatus(sessionId, { status: 'downloading_creds' });
+          broadcastStatus(sessionId, { status: 'syncing_session' });
 
           while (attempts < maxAttempts && !credsData) {
             try {
               const credsPath = path.join(sessionDir, sessionId, 'creds.json');
 
-              if (fs.existsSync(credsPath)) {
-                const data = fs.readFileSync(credsPath);
-                if (data && data.length > 100) {
-                  credsData = data;
-                  break;
-                }
+              if (validateCredsFile(credsPath)) {
+                credsData = fs.readFileSync(credsPath);
+                break;
               }
 
               await delay(2000);
@@ -213,56 +405,71 @@ router.get('/', async (req, res) => {
           }
 
           try {
-            broadcastStatus(sessionId, { status: 'session_ready' });
+            broadcastStatus(sessionId, { status: 'sending_session' });
 
-            // Parse creds and wrap in proper format
-            const credsJson = JSON.parse(credsData);
-            const wrappedCreds = {
-              creds: credsJson,
-              keys: {}
-            };
-            // Compress and encode credentials
-            const compressed = zlib.gzipSync(Buffer.from(JSON.stringify(wrappedCreds)));
-            const b64 = compressed.toString('base64');
+            const b64 = credsData.toString('base64');
 
-            // Send via interactive buttons
-            await sendButtons(whatsapp, whatsapp.user.id, {
-              title: '',
-              text: b64,
-              footer: '> *powered by talkdrove*',
-              buttons: [
-                {
-                  name: 'cta_copy',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: 'Copy',
-                    copy_code: b64,
-                  }),
-                },
-                {
-                  name: 'cta_url',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: 'Visit Session site',
-                    url: 'https://session.talkdrove.com',
-                  }),
-                },
-                {
-                  name: 'cta_url',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: 'Source Code',
-                    url: 'https://github.com/HyHamza/Session-Generator',
-                  }),
-                },
-                {
-                  name: 'cta_url',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: 'WaChannel',
-                    url: 'https://whatsapp.com/channel/0029Vb3hlgX5kg7G0nFggl0Y',
-                  }),
-                },
-              ],
-            });
+            let sessionSent = false;
+            let sendAttempts = 0;
+            const maxSendAttempts = 5;
 
-            await delay(2000);
+            while (sendAttempts < maxSendAttempts && !sessionSent) {
+              try {
+                await sendButtons(whatsapp, whatsapp.user.id, {
+                  title: '✅ Session Ready',
+                  text: `\`\`\`${b64}\`\`\``,
+                  footer: '> *Powered By TalkDrove*\n> ⚠️ Keep this session private and secure!',
+                  buttons: [
+                    {
+                      name: 'cta_copy',
+                      buttonParamsJson: JSON.stringify({
+                        display_text: 'Copy Session',
+                        copy_code: b64,
+                      }),
+                    },
+                    {
+                      name: 'cta_url',
+                      buttonParamsJson: JSON.stringify({
+                        display_text: 'Visit Session Site',
+                        url: 'https://session.talkdrove.com',
+                      }),
+                    },
+                    {
+                      name: 'cta_url',
+                      buttonParamsJson: JSON.stringify({
+                        display_text: 'Source Code',
+                        url: 'https://github.com/HyHamza/Session-Generator',
+                      }),
+                    },
+                    {
+                      name: 'cta_url',
+                      buttonParamsJson: JSON.stringify({
+                        display_text: 'WaChannel',
+                        url: 'https://whatsapp.com/channel/0029Vb3hlgX5kg7G0nFggl0Y',
+                      }),
+                    },
+                  ],
+                });
+
+                sessionSent = true;
+                broadcastStatus(sessionId, { status: 'session_ready' });
+              } catch (err) {
+                console.error('Send error:', err);
+                sendAttempts++;
+
+                if (sendAttempts < maxSendAttempts) {
+                  await delay(3000);
+                }
+              }
+            }
+
+            if (!sessionSent) {
+              broadcastStatus(sessionId, { status: 'error' });
+              await cleanSession();
+              return;
+            }
+
+            await delay(3000);
             await whatsapp.ws.close();
           } catch (err) {
             console.error('Send error:', err);
@@ -272,26 +479,36 @@ router.get('/', async (req, res) => {
           }
         }
 
-        // Connection lost - try reconnecting
-        else if (
-          connection === 'close' &&
-          lastDisconnect &&
-          lastDisconnect.error &&
-          lastDisconnect.error.output.statusCode !== 401
-        ) {
-          broadcastStatus(sessionId, { status: 'error' });
-          await delay(10000);
-          initQRSession();
+        // Handle connection close
+        else if (connection === 'close') {
+          // FIX: Better error handling
+          const statusCode = lastDisconnect?.error?.output?.statusCode;
+          const shouldReconnect = statusCode !== 401 && statusCode !== 403;
+          
+          if (shouldReconnect && !sessionCleaned) {
+            console.log('Connection closed unexpectedly, reconnecting...');
+            broadcastStatus(sessionId, { status: 'reconnecting' });
+            await delay(5000);
+            initQRSession();
+          } else {
+            console.log('Session closed:', statusCode);
+            broadcastStatus(sessionId, { status: 'error' });
+            await cleanSession();
+          }
         }
       });
     } catch (err) {
       console.error('Session error:', err);
 
       if (!responseSent && !res.headersSent) {
-        res.status(500).json({ error: 'QR service unavailable' });
+        res.status(500).json({ 
+          error: 'QR service unavailable',
+          message: err.message 
+        });
         responseSent = true;
       }
 
+      broadcastStatus(sessionId, { status: 'error' });
       await cleanSession();
     }
   }
@@ -303,10 +520,12 @@ router.get('/', async (req, res) => {
     await cleanSession();
 
     if (!responseSent && !res.headersSent) {
-      res.status(500).json({ error: 'Service error' });
+      res.status(500).json({ 
+        error: 'Service error',
+        message: err.message 
+      });
     }
   }
 });
-
 
 module.exports = router;

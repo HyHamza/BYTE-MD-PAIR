@@ -188,13 +188,14 @@ router.get('/', async (req, res) => {
 
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
         
-        // FIX: Don't pass generateRandomCode() - it's not needed
-        const pairingCode = await whatsapp.requestPairingCode(phoneNumber);
+        // FIXED: Pass generateRandomCode() as second parameter for proper pairing
+        const randomCode = generateRandomCode();
+        const pairingCode = await whatsapp.requestPairingCode(phoneNumber, randomCode);
 
         if (!responseSent && !res.headersSent) {
           broadcastStatus(sessionId, { status: 'code_generated' });
           
-          // FIX: Encrypt session ID before sending
+          // Encrypt session ID before sending
           const encryptedSessionId = encryptSessionId(sessionId);
           
           res.json({ 
@@ -263,7 +264,6 @@ router.get('/', async (req, res) => {
                   // Encode credentials to base64
                   const b64 = credsData.toString('base64');
 
-                  // FIX: Send to authenticated user (whatsapp.user.id)
                   await sendButtons(whatsapp, whatsapp.user.id, {
                     title: '✅ Session Ready',
                     text: `\`\`\`${b64}\`\`\``,
@@ -330,7 +330,7 @@ router.get('/', async (req, res) => {
               return;
             }
 
-            //////////////////////// Wait a bit before closing connection
+            // Wait a bit before closing connection
             await delay(3000);
             await whatsapp.ws.close();
           } catch (err) {
@@ -346,7 +346,6 @@ router.get('/', async (req, res) => {
 
         // Handle connection close
         else if (connection === 'close') {
-          // FIX: Better error handling
           const statusCode = lastDisconnect?.error?.output?.statusCode;
           const shouldReconnect = statusCode !== 401 && statusCode !== 403;
           

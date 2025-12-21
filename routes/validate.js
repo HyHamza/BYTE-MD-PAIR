@@ -70,14 +70,6 @@ async function validateBase64(base64Str, res) {
     const credsBuffer = Buffer.from(cleanedBase64, 'base64');
     const credsData = JSON.parse(credsBuffer.toString('utf8'));
 
-    if (!isValidCredsStructure(credsData)) {
-      return res.status(400).json({
-        valid: false,
-        message: 'Invalid credentials structure',
-        details: 'Missing required fields in credentials',
-      });
-    }
-
     const result = await testConnection(credsData);
 
     return res.json({
@@ -112,13 +104,8 @@ async function validateFile(fileBuffer, res) {
 
     const credsData = JSON.parse(fileBuffer.toString('utf8'));
 
-    if (!isValidCredsStructure(credsData)) {
-      return res.status(400).json({
-        valid: false,
-        message: 'Invalid credentials structure',
-        details: 'Missing required fields in credentials file',
-      });
-    }
+    // Skip structure validation - let Baileys handle it
+    console.log('Credentials keys:', Object.keys(credsData));
 
     const result = await testConnection(credsData);
 
@@ -140,39 +127,10 @@ async function validateFile(fileBuffer, res) {
 }
 
 // ──────────────────────────────────────────────────────────────
-// Credentials Structure Validation
+// Credentials Structure Validation (REMOVED - Too Strict)
 // ──────────────────────────────────────────────────────────────
-
-function isValidCredsStructure(creds) {
-  if (!creds || typeof creds !== 'object') {
-    return false;
-  }
-
-  // Check required fields
-  const requiredFields = [
-    'noiseKey',
-    'signedIdentityKey',
-    'signedPreKey',
-    'registrationId',
-    'advSecretKey',
-    'me'
-  ];
-
-  for (const field of requiredFields) {
-    if (!creds[field]) {
-      console.log(`Missing required field: ${field}`);
-      return false;
-    }
-  }
-
-  // Validate 'me' object
-  if (!creds.me.id || !creds.me.name) {
-    console.log('Invalid me object');
-    return false;
-  }
-
-  return true;
-}
+// The old validation was checking for specific fields that may vary
+// between Baileys versions. Now we let Baileys itself validate the structure.
 
 // ──────────────────────────────────────────────────────────────
 // Connection Test
@@ -182,13 +140,20 @@ async function testConnection(credsData) {
   const tempDir = path.join(__dirname, `.temp-${Date.now()}-${Math.random().toString(36).substring(7)}`);
 
   try {
-    // Create temp directory
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
+    // Create temp directory and ensure it exists
+    fs.mkdirSync(tempDir, { recursive: true });
+    
+    // Wait a bit to ensure directory is ready (Windows issue)
+    await new Promise(resolve => setTimeout(resolve, 100));
 
+    // Write credentials file first
     const credsPath = path.join(tempDir, 'creds.json');
     fs.writeFileSync(credsPath, JSON.stringify(credsData, null, 2));
+    
+    // Verify file was written
+    if (!fs.existsSync(credsPath)) {
+      throw new Error('Failed to write credentials file');
+    }
 
     const { version } = await fetchLatestBaileysVersion();
     const { state, saveCreds } = await useMultiFileAuthState(tempDir);
@@ -201,18 +166,31 @@ async function testConnection(credsData) {
 
       let socket = null;
       let cleaned = false;
+      let shouldSaveCreds = true;
 
       const cleanup = () => {
         if (!cleaned) {
           cleaned = true;
+          shouldSaveCreds = false; // Prevent further creds saving
           clearTimeout(timeout);
           
           if (socket?.ws) {
             try {
               socket.ws.close();
             } catch (err) {
-              console.error('Error closing socket:', err);
+              // Ignore close errors
             }
+          }
+        }
+      };
+
+      // Safe saveCreds wrapper that checks if cleanup happened
+      const safeSaveCreds = async () => {
+        if (shouldSaveCreds && fs.existsSync(tempDir)) {
+          try {
+            await saveCreds();
+          } catch (err) {
+            // Ignore save errors during validation
           }
         }
       };
@@ -238,7 +216,7 @@ async function testConnection(credsData) {
             getMessage: async () => undefined,
           });
 
-          socket.ev.on('creds.update', saveCreds);
+          socket.ev.on('creds.update', safeSaveCreds);
 
           socket.ev.on('connection.update', (update) => {
             const { connection, lastDisconnect, qr } = update;
@@ -252,7 +230,7 @@ async function testConnection(credsData) {
             if (connection === 'open') {
               cleanup();
               
-              // FIX: Extract phone number from authenticated user
+              // Extract phone number from authenticated user
               const phoneNumber = socket.user?.id?.split(':')[0] || 'Unknown';
               
               resolve({
@@ -265,7 +243,7 @@ async function testConnection(credsData) {
               const statusCode = lastDisconnect?.error?.output?.statusCode;
               const errorMessage = lastDisconnect?.error?.message;
 
-              // FIX: Better error categorization with clear user instructions
+              // Better error categorization with clear user instructions
               if (statusCode === 401) {
                 reject(new Error('SESSION_EXPIRED: Your session has expired or been logged out. Please generate a new session using the pairing code.'));
               } else if (statusCode === 403) {
@@ -294,14 +272,16 @@ async function testConnection(credsData) {
   } catch (err) {
     throw new Error(`Setup error: ${err.message}`);
   } finally {
-    // Clean up temp directory
-    try {
-      if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
+    // Clean up temp directory with delay to ensure socket is fully closed
+    setTimeout(() => {
+      try {
+        if (fs.existsSync(tempDir)) {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+        }
+      } catch (err) {
+        console.error('Cleanup error:', err);
       }
-    } catch (err) {
-      console.error('Cleanup error:', err);
-    }
+    }, 1000);
   }
 }
 

@@ -266,7 +266,7 @@ router.get('/', async (req, res) => {
 
                   await sendButtons(whatsapp, whatsapp.user.id, {
                     title: '✅ Session Ready',
-                    text: `\`\`\`${b64}\`\`\``,
+                    text: `${b64}`,
                     footer: '> ⚠️ Keep this session private and secure',
                     buttons: [
                       {

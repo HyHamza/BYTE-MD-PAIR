@@ -215,13 +215,11 @@ router.get('/', async (req, res) => {
         if (connection === 'open') {
           broadcastStatus(sessionId, { status: 'connecting' });
           
-          // FIX: Reduced initial wait time
           await delay(10000);
 
-          // Wait for creds.json to be properly written
           let credsData = null;
           let attempts = 0;
-          const maxAttempts = 20;
+          const maxAttempts = 3;
 
           broadcastStatus(sessionId, { status: 'waiting_for_creds' });
 
@@ -229,7 +227,6 @@ router.get('/', async (req, res) => {
             try {
               const credsPath = path.join(sessionDir, sessionId, 'creds.json');
 
-              // FIX: Use proper validation instead of just size check
               if (validateCredsFile(credsPath)) {
                 credsData = fs.readFileSync(credsPath);
                 broadcastStatus(sessionId, { status: 'creds_validated' });
@@ -255,7 +252,6 @@ router.get('/', async (req, res) => {
           }
 
           try {
-            // Small delay to ensure file is completely written
             await delay(2000);
 
             let sessionSent = false;

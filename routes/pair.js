@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const zlib = require('zlib');
+const crypto = require('crypto');
 const pino = require('pino');
 const { sendButtons } = require('gifted-btns');
 
@@ -16,7 +16,6 @@ const {
 
 const { GenID, removeFile, generateRandomCode } = require('../lib');
 
-
 // ──────────────────────────────────────────────────────────────
 // Configuration
 // ──────────────────────────────────────────────────────────────
@@ -25,10 +24,72 @@ const router = express.Router();
 const sessionDir = path.join(__dirname, 'session');
 const activeConnections = new Map();
 
+// Encryption configuration (store in environment variables)
+const ENCRYPTION_KEY = process.env.SESSION_ENCRYPTION_KEY || crypto.randomBytes(32);
+const ENCRYPTION_IV_LENGTH = 16;
+
+// ──────────────────────────────────────────────────────────────
+// Encryption Utilities
+// ──────────────────────────────────────────────────────────────
+
+function encryptSessionId(sessionId) {
+  const iv = crypto.randomBytes(ENCRYPTION_IV_LENGTH);
+  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+  
+  let encrypted = cipher.update(sessionId, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  
+  // Combine IV and encrypted data
+  return iv.toString('hex') + ':' + encrypted;
+}
+
+function decryptSessionId(encryptedData) {
+  const parts = encryptedData.split(':');
+  const iv = Buffer.from(parts[0], 'hex');
+  const encrypted = parts[1];
+  
+  const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
+  
+  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  
+  return decrypted;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Validation Utilities
+// ──────────────────────────────────────────────────────────────
+
+function validateCredsFile(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return false;
+    }
+
+    const stats = fs.statSync(filePath);
+    
+    // Check minimum file size (valid creds.json is typically > 500 bytes)
+    if (stats.size < 500) {
+      return false;
+    }
+
+    // Validate JSON structure
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    
+    // Check for required fields
+    if (!data.me || !data.me.id || !data.noiseKey || !data.signedIdentityKey) {
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Validation error:', err);
+    return false;
+  }
+}
 
 // ──────────────────────────────────────────────────────────────
 // Status Broadcasting via SSE
-// Keeps the frontend updated in real-time
 // ──────────────────────────────────────────────────────────────
 
 router.get('/status/:id', (req, res) => {
@@ -69,10 +130,8 @@ function broadcastStatus(id, status) {
   }
 }
 
-
 // ──────────────────────────────────────────────────────────────
 // Pair Code Generation Route
-// Phone number authentication FTW
 // ──────────────────────────────────────────────────────────────
 
 router.get('/', async (req, res) => {
@@ -81,6 +140,11 @@ router.get('/', async (req, res) => {
   let format = req.query.format || 'creds';
   let responseSent = false;
   let sessionCleaned = false;
+
+  // Validate phone number
+  if (!phoneNumber || phoneNumber.replace(/[^0-9]/g, '').length < 10) {
+    return res.status(400).json({ error: 'Invalid phone number' });
+  }
 
   async function cleanSession() {
     if (!sessionCleaned) {
@@ -126,14 +190,20 @@ router.get('/', async (req, res) => {
         await delay(1500);
 
         phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
-        const pairingCode = await whatsapp.requestPairingCode(
-          phoneNumber,
-          generateRandomCode()
-        );
+        
+        // FIX: Don't pass generateRandomCode() - it's not needed
+        const pairingCode = await whatsapp.requestPairingCode(phoneNumber);
 
         if (!responseSent && !res.headersSent) {
           broadcastStatus(sessionId, { status: 'code_generated' });
-          res.json({ code: pairingCode, sessionId });
+          
+          // FIX: Encrypt session ID before sending
+          const encryptedSessionId = encryptSessionId(sessionId);
+          
+          res.json({ 
+            code: pairingCode, 
+            sessionId: encryptedSessionId 
+          });
           responseSent = true;
         }
       }
@@ -144,29 +214,29 @@ router.get('/', async (req, res) => {
 
         if (connection === 'open') {
           broadcastStatus(sessionId, { status: 'connecting' });
-          await delay(50000);
+          
+          // FIX: Reduced initial wait time
+          await delay(10000);
 
-          // Retrieve credentials
+          // Wait for creds.json to be properly written
           let credsData = null;
           let attempts = 0;
-          const maxAttempts = 15;
+          const maxAttempts = 20;
 
-          broadcastStatus(sessionId, { status: 'downloading_creds' });
+          broadcastStatus(sessionId, { status: 'waiting_for_creds' });
 
           while (attempts < maxAttempts && !credsData) {
             try {
               const credsPath = path.join(sessionDir, sessionId, 'creds.json');
 
-              if (fs.existsSync(credsPath)) {
-                const data = fs.readFileSync(credsPath);
-                if (data && data.length > 100) {
-                  credsData = data;
-                  broadcastStatus(sessionId, { status: 'creds_found' });
-                  break;
-                }
+              // FIX: Use proper validation instead of just size check
+              if (validateCredsFile(credsPath)) {
+                credsData = fs.readFileSync(credsPath);
+                broadcastStatus(sessionId, { status: 'creds_validated' });
+                break;
               }
 
-              await delay(8000);
+              await delay(3000);
               attempts++;
             } catch (err) {
               console.error('Read error:', err);
@@ -176,13 +246,17 @@ router.get('/', async (req, res) => {
           }
 
           if (!credsData) {
-            broadcastStatus(sessionId, { status: 'error' });
+            broadcastStatus(sessionId, { 
+              status: 'error',
+              message: 'Failed to retrieve session credentials'
+            });
             await cleanSession();
             return;
           }
 
           try {
-            await delay(5000);
+            // Small delay to ensure file is completely written
+            await delay(2000);
 
             let sessionSent = false;
             let sendAttempts = 0;
@@ -193,26 +267,26 @@ router.get('/', async (req, res) => {
             while (sendAttempts < maxSendAttempts && !sessionSent) {
               try {
                 if (format === 'base64') {
-                  // Encode credentials directly to base64
+                  // Encode credentials to base64
                   const b64 = credsData.toString('base64');
 
-                  // Send with interactive buttons
+                  // FIX: Send to authenticated user (whatsapp.user.id)
                   await sendButtons(whatsapp, whatsapp.user.id, {
-                    title: '',
-                    text: b64,
-                    footer: '> *Powered By TalkDrove*',
+                    title: '✅ Session Ready',
+                    text: `\`\`\`${b64}\`\`\``,
+                    footer: '> *Powered By TalkDrove*\n> ⚠️ Keep this session private and secure!',
                     buttons: [
                       {
                         name: 'cta_copy',
                         buttonParamsJson: JSON.stringify({
-                          display_text: 'Copy',
+                          display_text: 'Copy Session',
                           copy_code: b64,
                         }),
                       },
                       {
                         name: 'cta_url',
                         buttonParamsJson: JSON.stringify({
-                          display_text: 'Visit Session site',
+                          display_text: 'Visit Session Site',
                           url: 'https://session.talkdrove.com',
                         }),
                       },
@@ -233,16 +307,17 @@ router.get('/', async (req, res) => {
                     ],
                   });
                 } else {
-                  // Send as creds.json file
-                  await whatsapp.sendMessage(phoneNumber + '@s.whatsapp.net', {
+                  // FIX: Send to authenticated user, not phone number
+                  await whatsapp.sendMessage(whatsapp.user.id, {
                     document: credsData,
                     mimetype: 'application/json',
                     fileName: 'creds.json',
+                    caption: '✅ Your WhatsApp session credentials\n\n⚠️ Keep this file secure and private!',
                   });
                 }
 
                 sessionSent = true;
-                broadcastStatus(sessionId, { status: 'session_ready' });
+                broadcastStatus(sessionId, { status: 'session_delivered' });
               } catch (err) {
                 console.error('Send error:', err);
                 sendAttempts++;
@@ -254,42 +329,66 @@ router.get('/', async (req, res) => {
             }
 
             if (!sessionSent) {
-              broadcastStatus(sessionId, { status: 'error' });
+              broadcastStatus(sessionId, { 
+                status: 'error',
+                message: 'Failed to send session file'
+              });
               await cleanSession();
               return;
             }
 
+            //////////////////////// Wait a bit before closing connection
             await delay(3000);
             await whatsapp.ws.close();
           } catch (err) {
             console.error('Processing error:', err);
-            broadcastStatus(sessionId, { status: 'error' });
+            broadcastStatus(sessionId, { 
+              status: 'error',
+              message: 'Session processing failed'
+            });
           } finally {
             await cleanSession();
           }
         }
 
-        // Reconnect on unexpected close
-        else if (
-          connection === 'close' &&
-          lastDisconnect &&
-          lastDisconnect.error &&
-          lastDisconnect.error.output.statusCode !== 401
-        ) {
-          console.log('Reconnecting...');
-          broadcastStatus(sessionId, { status: 'reconnecting' });
-          await delay(5000);
-          initPairSession();
+        // Handle connection close
+        else if (connection === 'close') {
+          // FIX: Better error handling
+          const statusCode = lastDisconnect?.error?.output?.statusCode;
+          const shouldReconnect = statusCode !== 401 && statusCode !== 403;
+          
+          if (shouldReconnect && !sessionCleaned) {
+            console.log('Connection closed unexpectedly, reconnecting...');
+            broadcastStatus(sessionId, { status: 'reconnecting' });
+            await delay(5000);
+            initPairSession();
+          } else {
+            if (statusCode === 401 || statusCode === 403) {
+              console.log('Authentication failed');
+              broadcastStatus(sessionId, { 
+                status: 'error',
+                message: 'Authentication failed - invalid pairing code'
+              });
+            }
+            await cleanSession();
+          }
         }
       });
     } catch (err) {
       console.error('Session error:', err);
 
       if (!responseSent && !res.headersSent) {
-        res.status(500).json({ error: 'Pairing service unavailable' });
+        res.status(500).json({ 
+          error: 'Pairing service unavailable',
+          message: err.message 
+        });
         responseSent = true;
       }
 
+      broadcastStatus(sessionId, { 
+        status: 'error',
+        message: err.message 
+      });
       await cleanSession();
     }
   }
@@ -301,10 +400,12 @@ router.get('/', async (req, res) => {
     await cleanSession();
 
     if (!responseSent && !res.headersSent) {
-      res.status(500).json({ error: 'Service error' });
+      res.status(500).json({ 
+        error: 'Service error',
+        message: err.message 
+      });
     }
   }
 });
-
 
 module.exports = router;

@@ -61,14 +61,6 @@ async function validateBase64(base64Str, res) {
     const credsBuffer = Buffer.from(base64Str.trim(), 'base64');
     const credsData = JSON.parse(credsBuffer.toString('utf8'));
 
-    if (!credsData.creds || !credsData.keys) {
-      return res.status(400).json({
-        valid: false,
-        message: 'Invalid credentials structure',
-        details: 'Missing creds or keys',
-      });
-    }
-
     await testConnection(credsData);
 
     return res.json({
@@ -96,14 +88,6 @@ async function validateBase64(base64Str, res) {
 async function validateFile(fileBuffer, res) {
   try {
     const credsData = JSON.parse(fileBuffer.toString('utf8'));
-
-    if (!credsData.creds || !credsData.keys) {
-      return res.status(400).json({
-        valid: false,
-        message: 'Invalid creds.json file structure',
-        details: 'Missing creds or keys',
-      });
-    }
 
     await testConnection(credsData);
 

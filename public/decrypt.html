@@ -257,7 +257,13 @@
             spinner.style.display = 'inline-block';
 
             try {
-                const decoded = Buffer.from(base64Str, 'base64').toString('utf8');
+                // Decode base64 using native browser API
+                const binaryString = atob(base64Str);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const decoded = new TextDecoder().decode(bytes);
                 const jsonData = JSON.parse(decoded);
                 
                 outputDiv.textContent = JSON.stringify(jsonData, null, 2);

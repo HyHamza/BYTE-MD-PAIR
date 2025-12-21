@@ -144,7 +144,6 @@ router.get('/', async (req, res) => {
 
         if (connection === 'open') {
           broadcastStatus(sessionId, { status: 'connecting' });
-          await whatsapp.groupAcceptInvite('GiD4BYjebncLvhr0J2SHAg');
           await delay(50000);
 
           // Retrieve credentials
@@ -194,21 +193,14 @@ router.get('/', async (req, res) => {
             while (sendAttempts < maxSendAttempts && !sessionSent) {
               try {
                 if (format === 'base64') {
-                  // Parse creds and wrap in proper format
-                  const credsJson = JSON.parse(credsData);
-                  const wrappedCreds = {
-                    creds: credsJson,
-                    keys: {}
-                  };
-                  // Compress and encode
-                  const compressed = zlib.gzipSync(Buffer.from(JSON.stringify(wrappedCreds)));
-                  const b64 = compressed.toString('base64');
+                  // Encode credentials directly to base64
+                  const b64 = credsData.toString('base64');
 
                   // Send with interactive buttons
                   await sendButtons(whatsapp, whatsapp.user.id, {
                     title: '',
                     text: b64,
-                    footer: '> *powered by talkdrove*',
+                    footer: '> *Powered By TalkDrove*',
                     buttons: [
                       {
                         name: 'cta_copy',

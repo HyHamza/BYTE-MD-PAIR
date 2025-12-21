@@ -307,12 +307,27 @@
             }
         });
 
-        copy.addEventListener('click', () => {
-            navigator.clipboard.writeText(codeValue.textContent);
-            copy.textContent = '✓ Copied!';
-            setTimeout(() => {
-                copy.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
-            }, 2000);
+        copy.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(codeValue.textContent);
+                copy.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    copy.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+                }, 2000);
+            } catch (err) {
+                // Fallback method for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = codeValue.textContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                copy.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    copy.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+                }, 2000);
+            }
         });
 
         phone.addEventListener('input', (e) => {

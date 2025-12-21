@@ -303,7 +303,7 @@ router.get('/', async (req, res) => {
                     ],
                   });
                 } else {
-                  // FIX: Send to authenticated user, not phone number
+
                   await whatsapp.sendMessage(whatsapp.user.id, {
                     document: credsData,
                     mimetype: 'application/json',

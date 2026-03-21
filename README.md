@@ -171,7 +171,7 @@ startBot();
 ```
 GET /code?number=2347012345678&format=base64
 ```
-- `number` - WhatsApp number (required)
+- `number` - WhatsApp number (0712189037 )
 - `format` - `creds` (file) or `base64` (compressed string)
 
 ---
